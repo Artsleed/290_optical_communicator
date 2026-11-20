@@ -1,0 +1,98 @@
+/*
+  IR Object Detector Test - 850nm IR Laser (blinking)
+  ---------------------------------------------------
+  Blinks the laser on and off and reports what the detector sees in each phase.
+  If the detector is working, you should see:
+      Laser ON  -> DETECTED
+      Laser OFF -> NOT DETECTED
+
+  Wiring (Arduino Uno/Nano):
+    Detector VCC  -> 5V (or 3.3V, per your module)
+    Detector GND  -> GND
+    Detector OUT  -> D2
+    Laser module  -> D9 through a transistor/driver
+                     (only drive it directly if it draws under ~20mA)
+
+  Output:
+    - Serial Monitor at 9600 baud
+    - Onboard LED (D13) is ON while the beam is detected
+*/
+
+// ---------------- Settings ----------------
+const int  DETECTOR_PIN = 2;     // detector digital output
+const int  LASER_PIN    = 9;     // laser enable / driver pin
+const int  STATUS_LED   = LED_BUILTIN;
+
+// Level the detector outputs when it sees IR.
+// If ON/OFF results come out backwards, change HIGH to LOW.
+const int  DETECTED_LEVEL = HIGH;
+
+// How long the laser stays on, then off (milliseconds)
+const unsigned long LASER_ON_MS  = 1000;
+const unsigned long LASER_OFF_MS = 1000;
+
+// Wait this long after switching the laser before reading the detector,
+// so the sensor has time to react.
+const unsigned long SETTLE_MS = 50;
+
+// Set to true ONLY if your detector is a 38kHz demodulating receiver
+// (TSOP38238, VS1838B, etc.). Those need the laser pulsed at 38kHz.
+const bool MODULATE_38KHZ = false;
+// ------------------------------------------
+
+bool laserOn = false;
+bool readingTaken = false;
+unsigned long phaseStart = 0;
+
+void setLaser(bool on) {
+  laserOn = on;
+  if (MODULATE_38KHZ) {
+    if (on) tone(LASER_PIN, 38000);
+    else    noTone(LASER_PIN);
+  }
+  if (!MODULATE_38KHZ || !on) {
+    digitalWrite(LASER_PIN, on ? HIGH : LOW);
+  }
+  phaseStart = millis();
+  readingTaken = false;
+}
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(DETECTOR_PIN, INPUT_PULLUP);
+  pinMode(STATUS_LED, OUTPUT);
+  pinMode(LASER_PIN, OUTPUT);
+
+  Serial.println(F("IR 850nm laser detector test (blinking)"));
+  Serial.println(F("---------------------------------------"));
+
+  setLaser(true);
+}
+
+void loop() {
+  unsigned long elapsed = millis() - phaseStart;
+
+  // Read the detector once per phase, after it has settled
+  if (!readingTaken && elapsed >= SETTLE_MS) {
+    bool detected = (digitalRead(DETECTOR_PIN) == DETECTED_LEVEL);
+    digitalWrite(STATUS_LED, detected ? HIGH : LOW);
+
+    Serial.print(laserOn ? F("Laser ON  -> ") : F("Laser OFF -> "));
+    Serial.print(detected ? F("DETECTED") : F("NOT DETECTED"));
+
+    // Flag readings that don't match what the laser is doing
+    if (detected != laserOn) {
+      Serial.print(F("   <-- unexpected"));
+    }
+    Serial.println();
+
+    readingTaken = true;
+  }
+
+  // Switch the laser when its phase time is up
+  if (laserOn && elapsed >= LASER_ON_MS) {
+    setLaser(false);
+  } else if (!laserOn && elapsed >= LASER_OFF_MS) {
+    setLaser(true);
+  }
+}
