@@ -1,25 +1,24 @@
 /*
-  Improved 850nm IR Laser Detector Test
-  Multiple sampling with noise filtering
+  Fast 850nm IR Laser Detector Test
+  Low delay with noise filtering
 */
 
 const int DETECTOR_PIN = 2;
 const int LASER_PIN = 9;
 const int STATUS_LED = LED_BUILTIN;
 
-// Change to HIGH if detection is reversed
 const int DETECTED_LEVEL = LOW;
 
-// Timing settings
-const unsigned long PHASE_MS = 1000;
-const unsigned long SETTLE_MS = 100;
+// Timing settings (milliseconds)
+const unsigned long PHASE_MS = 100;
+const unsigned long SETTLE_MS = 10;
 
-// Noise filtering thresholds
+// Detection thresholds (%)
 const int DETECT_THRESHOLD = 80;
 const int NO_DETECT_THRESHOLD = 20;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   pinMode(DETECTOR_PIN, INPUT_PULLUP);
   pinMode(LASER_PIN, OUTPUT);
@@ -28,8 +27,7 @@ void setup() {
   digitalWrite(LASER_PIN, LOW);
   digitalWrite(STATUS_LED, LOW);
 
-  Serial.println("850nm IR Laser Test");
-  Serial.println("------------------------");
+  Serial.println("Fast 850nm IR Laser Test");
 }
 
 void testLaser(bool laserOn) {
@@ -38,36 +36,23 @@ void testLaser(bool laserOn) {
 
   digitalWrite(LASER_PIN, laserOn ? HIGH : LOW);
 
-  // Allow detector to stabilize
   delay(SETTLE_MS);
 
   unsigned int detectedCount = 0;
   unsigned int totalSamples = 0;
-  unsigned int highCount = 0;
 
-  // Take hundreds of readings instead of one
   while (millis() - startTime < PHASE_MS) {
 
-    int sensorValue = digitalRead(DETECTOR_PIN);
-
-    if (sensorValue == DETECTED_LEVEL) {
+    if (digitalRead(DETECTOR_PIN) == DETECTED_LEVEL) {
       detectedCount++;
     }
 
-    if (sensorValue == HIGH) {
-      highCount++;
-    }
-
     totalSamples++;
-
-    delay(2);
+    delay(1);
   }
 
   float detectionPercent =
     100.0 * detectedCount / totalSamples;
-
-  float highPercent =
-    100.0 * highCount / totalSamples;
 
   Serial.print(laserOn ? "Laser ON  -> " :
                          "Laser OFF -> ");
@@ -99,10 +84,6 @@ void testLaser(bool laserOn) {
 
   Serial.print(" | Detection: ");
   Serial.print(detectionPercent, 1);
-  Serial.print("%");
-
-  Serial.print(" | Raw HIGH: ");
-  Serial.print(highPercent, 1);
   Serial.println("%");
 }
 
