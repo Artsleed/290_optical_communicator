@@ -45,7 +45,7 @@
 // ------------------------- Pins and polarity (change to match your wiring) -------------------------
 const uint8_t LASER_PIN = 3;          // HIGH = NPN on = laser on
 const uint8_t DET_PIN = 2;            // detector digital output
-const bool DET_ACTIVE_HIGH = true;    // true if the detector output is HIGH when it sees light
+const bool DET_ACTIVE_HIGH = false;    // true if the detector output is HIGH when it sees light
 
 // ------------------------- Security settings -------------------------
 const uint8_t DEVICE_ID = 0;          // 0 on one board, 1 on the other (see above)
