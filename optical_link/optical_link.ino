@@ -50,8 +50,8 @@ const bool DET_ACTIVE_HIGH = true;    // true if the detector output is HIGH whe
 // ------------------------- Security settings -------------------------
 const uint8_t DEVICE_ID = 0;          // 0 on one board, 1 on the other (see above)
 const uint8_t KEY[16] = {             // CHANGE ME: same 16 bytes on both boards
-  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-  0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF
+  0x64, 0x24, 0xA9, 0xDE, 0x32, 0xE5, 0x5D, 0x03,
+  0xB8, 0x91, 0xAC, 0x52, 0x8A, 0xDD, 0xE0, 0xF7
 };
 const int EEPROM_CTR_ADDR = 0;        // 4 bytes of EEPROM hold the message-counter reservation
 const uint32_t CTR_RESERVE = 32;      // EEPROM is written once per boot and once per 32 messages
